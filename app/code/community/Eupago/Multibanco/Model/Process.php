@@ -31,7 +31,7 @@ class Eupago_Multibanco_Model_Process extends Mage_Payment_Model_Method_Abstract
 		$order = $observer->getEvent()->getOrder();
         $id = $observer->getEvent()->getOrder()->getIncrementId();
         $order_value = $observer->getEvent()->getOrder()->getGrandTotal();
-		
+
         $entity = $observer->getEvent()->getOrder()->getId();
         $sales_flat_order_payment = Mage::getSingleton('core/resource')->getTableName('sales_flat_order_payment');
         $sales_flat_quote_payment = Mage::getSingleton('core/resource')->getTableName('sales_flat_quote_payment');
@@ -39,33 +39,38 @@ class Eupago_Multibanco_Model_Process extends Mage_Payment_Model_Method_Abstract
         $resource = Mage::getSingleton('core/resource'); 
         $writeConnection = $resource->getConnection('core_write');
 		$quote_id = $order->getQuoteId();
-			
+		
+		$conn = Mage::getSingleton('core/resource')->getConnection('core_read');
+		
 		$payment_method =$order->getPayment()->getMethodInstance()->getCode();
 		
-		if(Mage::getSingleton('admin/session')->isLoggedIn()){
-			Mage::getSingleton('admin/session')->setAdminQuoteEupagoId($quote_id);
-			$_SESSION['admin_quote_eupago_id'] = $quote_id;
-		}
 		
-		
-		if($payment_method == "multibanco"){
-			if ($quote_id != ""  ) {	
-				$conn = Mage::getSingleton('core/resource')->getConnection('core_read');
+		if($payment_method == "multibanco" && $quote_id != ""  ){
+			if(Mage::getSingleton('admin/session')->isLoggedIn()){
+				$ReOrderedId = Mage::getSingleton('admin/session')->getReOrderedId();
+				$ReferenciaReorder = Mage::getSingleton('admin/session')->getReferenciaReorder();
+
+				if($ReOrderedId != $entity){
+					Mage::getSingleton('admin/session')->setReOrderedId($entity);
+					$referencia = $ReferenciaReorder;
+				}
+				
+			}else{
 				$query = $conn->query("SELECT  eupago_referencia FROM $sales_flat_quote_payment  WHERE quote_id =$quote_id");
-				$referencia = $query->fetchColumn();			
-				if ($referencia == "") {
-					$this->geraReferencia($chave_api, $order_value, $id, $entity, $writeConnection, $sales_flat_order_payment,  $sales_flat_quote_payment, $quote_id);
-				} else {
-					$query = $conn->query("SELECT  eupago_entidade FROM $sales_flat_quote_payment  WHERE quote_id =$quote_id");
-					$entidade = $query->fetchColumn();
-					$query = $conn->query("SELECT  eupago_montante FROM $sales_flat_quote_payment  WHERE quote_id =$quote_id");
-					$montante = $query->fetchColumn();
-					$query = "UPDATE $sales_flat_order_payment SET  eupago_montante =    $montante, eupago_entidade =   $entidade, eupago_referencia =   $referencia  WHERE parent_id =$entity";
-					$writeConnection->query($query);
-					$query = "UPDATE $sales_flat_quote_payment SET  eupago_montante =    $montante, eupago_entidade =    $entidade, eupago_referencia =   $referencia  WHERE quote_id =$quote_id";
-					$writeConnection->query($query);
-				}	
+				$referencia = $query->fetchColumn();
 			}
+			if ($referencia == "") {
+				$this->geraReferencia($chave_api, $order_value, $id, $entity, $writeConnection, $sales_flat_order_payment,  $sales_flat_quote_payment, $quote_id);
+			} else {
+				$query = $conn->query("SELECT  eupago_entidade FROM $sales_flat_quote_payment  WHERE quote_id =$quote_id");
+				$entidade = $query->fetchColumn();
+				$query = $conn->query("SELECT  eupago_montante FROM $sales_flat_quote_payment  WHERE quote_id =$quote_id");
+				$montante = $query->fetchColumn();
+				$query = "UPDATE $sales_flat_order_payment SET  eupago_montante = $montante, eupago_entidade =   $entidade, eupago_referencia =   $referencia  WHERE parent_id =$entity";
+				$writeConnection->query($query);
+				$query = "UPDATE $sales_flat_quote_payment SET  eupago_montante = $montante, eupago_entidade =    $entidade, eupago_referencia =   $referencia  WHERE quote_id =$quote_id";
+				$writeConnection->query($query);
+			}	
 		}
         return;
     }
@@ -107,11 +112,18 @@ class Eupago_Multibanco_Model_Process extends Mage_Payment_Model_Method_Abstract
             $referencia = $dados['1'];
 		}
 		
-		If($quote_id){
-			$query = "UPDATE $sales_flat_quote_payment SET  eupago_montante = $order_value, eupago_entidade = $entidade, eupago_referencia = $referencia  WHERE quote_id =$quote_id";
+		// no caso de ser do backoffice
+		if(Mage::getSingleton('admin/session')->isLoggedIn()){
+			$query = "UPDATE $sales_flat_order_payment SET eupago_montante = $order_value, eupago_entidade = $entidade, eupago_referencia = $referencia WHERE entity_id =$entity";
+			$writeConnection->query($query);
+			Mage::getSingleton('admin/session')->setReferenciaReorder($referencia);
+		}
+		
+		if($quote_id){
+			$query = "UPDATE $sales_flat_quote_payment SET eupago_montante = $order_value, eupago_entidade = $entidade, eupago_referencia = $referencia WHERE quote_id =$quote_id";
 			$writeConnection->query($query);
 		}else{
-			$query = "UPDATE $sales_flat_order_payment SET  eupago_montante = $order_value, eupago_entidade = $entidade, eupago_referencia = $referencia  WHERE parent_id =$entity";
+			$query = "UPDATE $sales_flat_order_payment SET eupago_montante = $order_value, eupago_entidade = $entidade, eupago_referencia = $referencia WHERE entity_id =$entity";
 			$writeConnection->query($query);
 		}
 	}

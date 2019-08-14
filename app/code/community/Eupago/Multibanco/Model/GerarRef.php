@@ -43,8 +43,6 @@ class Eupago_Multibanco_Model_GerarRef extends Mage_Payment_Model_Method_Abstrac
             $min='0';
         if($max=="")
             $max='9999.99';
-        
-     
 
         $paymentInfo = $this->getInfoInstance();
 

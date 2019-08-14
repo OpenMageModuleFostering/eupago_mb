@@ -10,8 +10,6 @@ class Eupago_Multibanco_Model_Convert_Order extends Mage_Sales_Model_Convert_Ord
     public function paymentToQuotePayment(Mage_Sales_Model_Order_Payment $payment, $quotePayment=null)
     {
         $quotePayment = parent::paymentToQuotePayment($payment, $quotePayment);
-
-		var_dump($quotePayment);
 		
         $quotePayment->setEupagoEntidade($payment->getEupagoEntidade())
 						->setEupagoReferencia($payment->getEupagoReferencia())
