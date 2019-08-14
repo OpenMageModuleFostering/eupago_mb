@@ -98,15 +98,20 @@ class Eupago_Multibanco_Model_Multibanco extends Mage_Payment_Model_Method_Abstr
 		if($result == false) {
             $errorMsg = $this->_getHelper()->__('Error Processing the request');
         } else {
-            if($result->estado_referencia == 'paga' || $result->estado_referencia == 'transferida'){
+            if(($result->estado_referencia == 'paga' || $result->estado_referencia == 'transferida')
+				&& $payment->getOrder()->getBaseTotalDue() == $result->valor){
 				// neste sistema altera logo para pago
 				$payment->setTransactionId($referencia."-capture");
 				$payment->setParentTransactionId($referencia);
                 $payment->setTransactionAdditionalInfo(Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS,array('referencia'=>$referencia,'resposta'=>$result->resposta,'method'=>'MULTIBANCO', "data de pagamento"=>$result->data_pagamento,  "hora de pagamento"=>$result->hora_pagamento));
 				$payment->setIsTransactionClosed(true);
 		    }else{
-                $errorMsg = "a referencia não se encontra paga";
-				Mage::log("pedido com erro: ".$errorMsg, null, 'eupago_multibanco.log');
+                if($payment->getOrder()->getBaseTotalDue() != $result->valor)
+					$errorMsg ="o valor pago não corresponde ao valor da encomenda";
+				else
+					$errorMsg = "a referência não se encontra paga";
+				
+				Mage::log("\nincrementId: ".$payment->getOrder()->getIncrementId()."\nentidade: ".$entidade."\nreferencia: ".$referencia."\nerro: ". $errorMsg , null, 'eupago_multibanco.log');
             }
         }
 		

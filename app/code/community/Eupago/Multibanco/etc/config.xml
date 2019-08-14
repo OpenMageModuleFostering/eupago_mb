@@ -21,6 +21,26 @@
                 <class>Eupago_Multibanco_Model</class>
             </multibanco>
         </models>
+		<events>
+			<sales_order_place_after>
+				<observers>
+					<namespace_module_order_observer>
+						<type>singleton</type>
+						<class>multibanco/observer</class>
+						<method>pendingPaymentState</method>
+					</namespace_module_order_observer>
+				</observers>
+			</sales_order_place_after>
+			<sales_order_invoice_save_after>
+				<observers>
+					<namespace_module_order_observer>
+						<type>singleton</type>
+						<class>multibanco/observer</class>
+						<method>sendInvoiceEmail</method>
+					</namespace_module_order_observer>
+				</observers>
+			</sales_order_invoice_save_after>
+		</events>
     </global>
 	<frontend>
 		<routers>

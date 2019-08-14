@@ -165,7 +165,6 @@ class Eupago_Multibanco_CallbackController extends Mage_Core_Controller_Front_Ac
 		$CallBack_referencia = $CallBack['referencia'];
 		$CallBack_chave_api = $CallBack['chave_api'];
 		$CallBack_orderId = $CallBack['identificador'];
-		$CallBack_autorizacao = $CallBack['autorizacao'];
 
 		////// dados de encomenda
 		$OrderNumber = $CallBack_orderId; //$CallBack_orderId vaem da api Eupago[order-id]
@@ -237,11 +236,9 @@ class Eupago_Multibanco_CallbackController extends Mage_Core_Controller_Front_Ac
 		
 		/////// gera autorizacao
 		$chave_api = Mage::getStoreConfig('payment/multibanco/chave');
-		$autorizacao = md5(date('Y-m-d').$chave_api);
 		
 		//////// Confere dados
 		$confere_montantes = (($valor_encomenda == $valor_gerado) == $CallBack_valor ? true : false);
-		$confere_autorizacao = ($autorizacao == $CallBack_autorizacao ? true : false);
 		$confere_referencia = ($referencia == $CallBack_referencia ? true : false);
 		$confere_chave_api = ($CallBack_chave_api == $chave_api ? true : false);
 		
