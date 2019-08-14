@@ -21,11 +21,12 @@ class Eupago_Multibanco_Block_Info_Multibanco extends Mage_Payment_Block_Info
 	
 	public function getMultibancoData(){
 		$info = $this->getData('info');
+		
 		$multibanco_data = (Object)$info['additional_information'];
-        if (!($info instanceof Mage_Payment_Model_Info)) {
-            Mage::throwException($this->__('Can not retrieve payment info model object.'));
-        }
-        return $multibanco_data;
+		if(!isset($multibanco_data->referencia))
+			$multibanco_data =  (Object)array("entidade" => $info['eupago_entidade'], "referencia" => str_pad($info['eupago_referencia'], 9, "0", STR_PAD_LEFT), "valor"=> $info['eupago_montante']);
+        
+		return $multibanco_data;
 	}
     
     public function getMethod()
