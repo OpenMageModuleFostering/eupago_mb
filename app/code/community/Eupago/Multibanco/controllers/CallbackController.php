@@ -1,13 +1,9 @@
 <?php
-/*
-Mygateway Payment Controller
-By: Junaid Bhura
-www.junaidbhura.com
-*/
 
 class Eupago_Multibanco_CallbackController extends Mage_Core_Controller_Front_Action {
 	
-	public function multibancoAction() {
+	// valida todos os metodos de pagamento
+	public function allAction(){
 		
 		// tirar de comentário se pretender validar apenas pedidos post
 		// if(!$this->getRequest()->isPost()) 
@@ -16,9 +12,68 @@ class Eupago_Multibanco_CallbackController extends Mage_Core_Controller_Front_Ac
 		// carrega dados de callback e encomenda
 		$callBack_params = (object)$this->getRequest()->getParams();
 		$order = Mage::getModel('sales/order')->load($callBack_params->identificador, 'increment_id');		
+		$method = $order->getPayment()->getMethod();
+		$metodo_callback = null;
+		switch(urldecode($callBack_params->mp)){
+			case 'PC:PT':
+				$metodo_callback = "multibanco";
+				break;
+			case 'MW:PT':
+				$metodo_callback = "mbway";
+				break;
+			default:
+				exit("método de pagamento inválido");
+		}
+					
+		// valida metodo de pagamento
+		if(!isset($callBack_params->mp) || $method != $metodo_callback)
+			exit("método de pagamento não corresponde ao da encomenda");
+		
+		// valida chave API
+		if($callBack_params->chave_api != Mage::getStoreConfig('payment/'.$metodo_callback.'/chave'))
+			exit("chave API inválida");
+		
+		// valida order_id
+		if($order->getId() == null)
+			exit("a encomenda não existe");
+
+		// valida estado da encomenda
+		if($order->getStatus() == "canceled") // devemos validar se esta completa?
+			exit("não foi possivel concluir o pagamento porque o estado da encomenda é: ".$order_status);
+		
+		// valida valor da encomenda -> comentar no caso de premitir pagamento parcial
+		if($order->getGrandTotal() != $callBack_params->valor)
+			exit ("O valor da encomenda e o valor pago não correspondem!");
+		
+		// verifica se a encomenda já está paga
+		if($order->getBaseTotalDue() == 0)
+			exit("A encomenda já se encontra paga!");
+		
+		// valida valor por pagar
+		if($order->getBaseTotalDue() < $callBack_params->valor)
+			exit("O valor a pagamento é inferior ao valor pago!");
+		
+		// marca como paga ou gera fatura
+		if($this->validaTransacao($callBack_params, $order)){
+			if(class_exists('SOAPClient'))
+				$this->capture($order);	
+			else
+				$this->marcaComoPaga($order, $callBack_params->valor, true); // -> para usar para marcar como paga sem gerar fatura			
+		}
+	}
+	
+	public function multibancoAction($params = null) {
+		
+		// tirar de comentário se pretender validar apenas pedidos post
+		// if(!$this->getRequest()->isPost()) 
+			// exit("pedido de callback deve ser post");
+		
+		// carrega dados de callback e encomenda
+		$callBack_params = ($params == null) ? (object)$this->getRequest()->getParams() : $params;
+		$order = Mage::getModel('sales/order')->load($callBack_params->identificador, 'increment_id');		
 		
 		// valida metodo de pagamento
-		if(!isset($callBack_params->mp) || $callBack_params->mp != 'PC:PT')
+		if(!isset($callBack_params->mp) || urldecode($callBack_params->mp) != 'PC:PT')
 			exit("método de pagamento inválido");
 		
 		// valida chave API
@@ -54,6 +109,53 @@ class Eupago_Multibanco_CallbackController extends Mage_Core_Controller_Front_Ac
 		}	
 	}
 	
+	public function mbwayAction($params = null) {
+		
+		// tirar de comentário se pretender validar apenas pedidos post
+		// if(!$this->getRequest()->isPost()) 
+			// exit("pedido de callback deve ser post");
+		
+		// carrega dados de callback e encomenda
+		$callBack_params = ($params == null) ? (object)$this->getRequest()->getParams() : $params;
+		$order = Mage::getModel('sales/order')->load($callBack_params->identificador, 'increment_id');		
+		
+		// valida metodo de pagamento
+		if(!isset($callBack_params->mp) || urldecode($callBack_params->mp) != 'MW:PT')
+			exit("método de pagamento inválido");
+		
+		// valida chave API
+		if($callBack_params->chave_api != Mage::getStoreConfig('payment/mbway/chave'))
+			exit("chave API inválida");
+		
+		// valida order_id
+		if($order->getId() == null)
+			exit("a encomenda não existe");
+
+		// valida estado da encomenda
+		if($order->getStatus() == "canceled") // devemos validar se esta completa?
+			exit("não foi possivel concluir o pagamento porque o estado da encomenda é: ".$order_status);
+		
+		// valida valor da encomenda -> comentar no caso de premitir pagamento parcial
+		if($order->getGrandTotal() != $callBack_params->valor)
+			exit ("O valor da encomenda e o valor pago não correspondem!");
+		
+		// verifica se a encomenda já está paga
+		if($order->getBaseTotalDue() == 0)
+			exit("A encomenda já se encontra paga!");
+		
+		// valida valor por pagar
+		if($order->getBaseTotalDue() < $callBack_params->valor)
+			exit("O valor a pagamento é inferior ao valor pago!");
+		
+		// marca como paga ou gera fatura
+		if($this->validaTransacao($callBack_params, $order)){
+			if(class_exists('SOAPClient'))
+				$this->capture($order);	
+			else
+				$this->marcaComoPaga($order, $callBack_params->valor, true); // -> para usar para marcar como paga sem gerar fatura			
+		}	
+	}
+	
 	// CALLBACK ANTIGO FICARÁ DEPRECATED NA PROXIMA VERSÃO
 	public function autorizeAction(){
 		
@@ -65,7 +167,6 @@ class Eupago_Multibanco_CallbackController extends Mage_Core_Controller_Front_Ac
 		$CallBack_orderId = $CallBack['identificador'];
 		$CallBack_autorizacao = $CallBack['autorizacao'];
 
-		
 		////// dados de encomenda
 		$OrderNumber = $CallBack_orderId; //$CallBack_orderId vaem da api Eupago[order-id]
 		$order = Mage::getModel('sales/order')->load($OrderNumber, 'increment_id');
@@ -76,7 +177,56 @@ class Eupago_Multibanco_CallbackController extends Mage_Core_Controller_Front_Ac
 		
 		// se não existir dados de pagamento antigos chama o novo callback
 		if($pagamento->eupago_referencia == null || $pagamento->eupago_referencia == "" ){
-			$this->multibancoAction();
+			// carrega dados de callback e encomenda
+			$callBack_params = (object)$CallBack;
+			$method = $order->getPayment()->getMethod();
+			$metodo_callback = null;
+			switch(urldecode($callBack_params->mp)){
+				case 'PC:PT':
+					$metodo_callback = "multibanco";
+					break;
+				case 'MW:PT':
+					$metodo_callback = "mbway";
+					break;
+				default:
+					exit("método de pagamento inválido");
+			}
+						
+			// valida metodo de pagamento
+			if(!isset($callBack_params->mp) || $method != $metodo_callback)
+				exit("método de pagamento não corresponde ao da encomenda");
+			
+			// valida chave API
+			if($callBack_params->chave_api != Mage::getStoreConfig('payment/'.$metodo_callback.'/chave'))
+				exit("chave API inválida");
+			
+			// valida order_id
+			if($order->getId() == null)
+				exit("a encomenda não existe");
+
+			// valida estado da encomenda
+			if($order->getStatus() == "canceled") // devemos validar se esta completa?
+				exit("não foi possivel concluir o pagamento porque o estado da encomenda é: ".$order_status);
+			
+			// valida valor da encomenda -> comentar no caso de premitir pagamento parcial
+			if($order->getGrandTotal() != $callBack_params->valor)
+				exit ("O valor da encomenda e o valor pago não correspondem!");
+			
+			// verifica se a encomenda já está paga
+			if($order->getBaseTotalDue() == 0)
+				exit("A encomenda já se encontra paga!");
+			
+			// valida valor por pagar
+			if($order->getBaseTotalDue() < $callBack_params->valor)
+				exit("O valor a pagamento é inferior ao valor pago!");
+			
+			// marca como paga ou gera fatura
+			if($this->validaTransacao($callBack_params, $order)){
+				if(class_exists('SOAPClient'))
+					$this->capture($order);	
+				else
+					$this->marcaComoPaga($order, $callBack_params->valor, true); // -> para usar para marcar como paga sem gerar fatura			
+			}
 			return;
 		}
 			
