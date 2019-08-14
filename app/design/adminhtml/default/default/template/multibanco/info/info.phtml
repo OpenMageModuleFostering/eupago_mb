@@ -1,0 +1,21 @@
+<table border="0" cellspacing="1" cellpadding="0">
+  <tr>
+    <td><img src="<?php echo $this->getSkinUrl('images/multibanco/eupagomultibanco.png') ?>" border="0" alt="<?php echo $this->getMethod()->getTitle(); ?>" title="<?php echo $this->getMethod()->getTitle(); ?>" /></td>
+  </tr>
+  <tr>
+    <td><table width="100%" border="0" cellspacing="1" cellpadding="0">
+      <tr>
+        <td><?php echo $this->__('<strong>Entidade:</strong>'); ?></td>
+        <td><?php echo $this->htmlEscape($this->getInfo()->getEupagoEntidade()) ?></td>
+      </tr>
+      <tr>
+        <td><?php echo $this->__('<strong>Referência:</strong>'); ?> </td>
+        <td><?php echo $this->htmlEscape($this->getInfo()->getEupagoReferencia()); ?></td>
+      </tr>
+      <tr>
+        <td><?php echo $this->__('<strong>Montante:</strong>'); ?></td>
+        <td><?php echo number_format($this->htmlEscape($this->getInfo()->getEupagoMontante()),'2',',','') . ' EUR'; ?></td>
+      </tr>
+    </table></td>
+  </tr>
+</table>

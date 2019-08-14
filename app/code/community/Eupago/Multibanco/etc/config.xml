@@ -15,13 +15,22 @@
                 </Eupago_Multibanco>
             </modules>
         </translate>
-			<layout>
-				<updates>
-					<yourmodule>
-						<file>multibanco.xml</file>
-					</yourmodule>
-				</updates>
-			</layout>
+		<layout>
+			<updates>
+				<yourmodule>
+					<file>multibanco.xml</file>
+				</yourmodule>
+			</updates>
+		</layout>
+		<routers>
+            <Eupago_Multibanco>
+                <use>standard</use>
+                <args>
+                    <module>Eupago_Multibanco</module>
+                    <frontName>Eupago</frontName>
+                </args>
+            </Eupago_Multibanco>
+        </routers> 
     </frontend>
     <adminhtml>
         <translate>

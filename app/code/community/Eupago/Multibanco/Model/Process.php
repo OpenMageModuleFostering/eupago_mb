@@ -22,7 +22,8 @@ class Eupago_Multibanco_Model_Process extends Mage_Payment_Model_Method_Abstract
     protected $_canFetchTransactionInfo = false;
     protected $_canReviewPayment = false;
     protected $_canCreateBillingAgreement = false;
-
+	// protected $chave_api = $this->getConfigData('chave');
+	
     public function orderObserver($observer) {
 
         $chave_api = $this->getConfigData('chave');
@@ -44,17 +45,32 @@ class Eupago_Multibanco_Model_Process extends Mage_Payment_Model_Method_Abstract
 
 
             if ($referencia == "") {
-                
-                $client = @new SoapClient('http://replica.eupago.pt/replica.eupagov1.wsdl', array('cache_wsdl' => WSDL_CACHE_NONE)); // chamada do serviço SOAP
-                $arraydados = array("chave" => $chave_api, "valor" => $order_value, "id" => $id); //cada canal tem a sua chave
-                $result = $client->gerarReferenciaMB($arraydados);
-                $query = "UPDATE $sales_flat_order_payment SET  eupago_montante =    $order_value, eupago_entidade =    $result->entidade, eupago_referencia =    $result->referencia  WHERE parent_id =$entity";
+                if(class_exists('SOAPClient')){
+					$arraydados = array("chave" => $chave_api, "valor" => $order_value, "id" => $id); //cada canal tem a sua chave
+					$client = @new SoapClient('http://replica.eupago.pt/replica.eupagov1.wsdl', array('cache_wsdl' => WSDL_CACHE_NONE)); // chamada do serviço SOAP
+					$result = $client->gerarReferenciaMB($arraydados);
+					$query = "UPDATE $sales_flat_order_payment SET  eupago_montante =    $order_value, eupago_entidade =    $result->entidade, eupago_referencia =    $result->referencia  WHERE parent_id =$entity";
+					$query = "UPDATE $sales_flat_quote_payment SET  eupago_montante =    $order_value, eupago_entidade =    $result->entidade, eupago_referencia =    $result->referencia  WHERE quote_id =$quote_id";
+				}else{    
+					$client = new Varien_Http_Client();
+					$client->setUri('https://replica.eupago.pt/bridge_clientes/bridge.php?servico=mb&chave_api='.$chave_api.'&valor='.$order_value.'&identificador='.$id)
+						->setMethod('GET')
+						->setConfig(array(
+								'maxredirects'=>1,
+								'timeout'=>30,
+						));
+						
+					$response = $client->request()->getBody();
+					$dados = explode('#', $response);
+                    $entidade = $dados['0'];
+                    $referencia = $dados['1'];
+					$query = "UPDATE $sales_flat_order_payment SET  eupago_montante =    $order_value, eupago_entidade =    $entidade, eupago_referencia =    $referencia  WHERE parent_id =$entity";
+					$query = "UPDATE $sales_flat_quote_payment SET  eupago_montante =    $order_value, eupago_entidade =    $entidade, eupago_referencia =    $referencia  WHERE quote_id =$quote_id";
+				
+				}
                 $writeConnection->query($query);
-                $query = "UPDATE $sales_flat_quote_payment SET  eupago_montante =    $order_value, eupago_entidade =    $result->entidade, eupago_referencia =    $result->referencia  WHERE quote_id =$quote_id";
                 $writeConnection->query($query);
-        
-                
-                
+
             } else {
 
                 $writeConnection = $resource->getConnection('core_write');
