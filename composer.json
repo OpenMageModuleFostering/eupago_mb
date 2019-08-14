@@ -1,0 +1,16 @@
+{
+    "name": "OpenMageModuleFostering/Eupago_MB",
+    "type": "magento-module",
+    "license": "GNU-General-Public-License-(GPL)",
+    "homepage": "",
+    "description": "Modulo de pagamento que gera referencias multibanco.",
+    "authors": [
+    {
+        "name": "euPago",
+        "email": "dev@eupago.pt"
+    }
+],
+    "suggest": {
+        "magento-hackathon/magento-composer-installer": "*"
+    }
+}
