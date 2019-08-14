@@ -9,8 +9,8 @@ class Eupago_Multibanco_Model_System_Config_Template
     public function toOptionArray()
     {
         return array(
-            array('value' => 'nenhum', 'label' => Mage::helper('adminhtml')->__('Nenhum')),
 			array('value' => 'multibanco', 'label' => Mage::helper('adminhtml')->__('Multibanco')),
+			array('value' => 'nenhum', 'label' => Mage::helper('adminhtml')->__('Nenhum')),
 		);
     }
 
@@ -22,8 +22,8 @@ class Eupago_Multibanco_Model_System_Config_Template
     public function toArray()
     {
         return array(
-            'nenhum' => Mage::helper('adminhtml')->__('Nenhum'),
 			'multibanco' 	=> Mage::helper('adminhtml')->__('Multibanco'),
+			'nenhum' => Mage::helper('adminhtml')->__('Nenhum'),
 		);
     }
 }

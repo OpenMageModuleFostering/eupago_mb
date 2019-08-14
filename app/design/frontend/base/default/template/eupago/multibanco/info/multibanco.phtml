@@ -1,8 +1,8 @@
-<ul id="payment_info_<?php echo $this->getMethodCode() ?>">
+<div id="payment_info_<?php echo $this->getMethodCode() ?>">
 	<?php 
 	$multibanco_data = $this->getMultibancoData(); 
 	if(isset($multibanco_data->referencia) && $multibanco_data->referencia != ""){?>
-	<li style="min-width: 350px;">
+	<div style="min-width: 350px;">
 		<div align='center'>
 			<table style="width:100%; padding:5px; font-size: 11px; color: #374953; margin:0 auto;">
 				<tbody>
@@ -33,11 +33,11 @@
 				</tbody>
 			</table>
 		</div>
-	</li>
+	</div>
 <?php }else{
-		echo "<li>";
+		echo "<ul><li>";
 		echo "<h4>Multibanco</h4>";
 		echo $this->__('Os dados para pagamento multibanco serão apresentados quando finalizar a sua encomenda e/ou enviados para o seu e-mail.');
-		echo "</li>";
+		echo "</li></ul>";
 	}?>
-</ul>
+</div>

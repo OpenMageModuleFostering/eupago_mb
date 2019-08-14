@@ -98,7 +98,7 @@ class Eupago_Multibanco_Model_Multibanco extends Mage_Payment_Model_Method_Abstr
 		if($result == false) {
             $errorMsg = $this->_getHelper()->__('Error Processing the request');
         } else {
-            if(($result->estado_referencia == 'paga' || $result->estado_referencia == 'transferida')
+            if(($result->estado_referencia == 'paga' || $result->estado_referencia == 'transferida' || $result->estado_referencia == "em processamento")
 				&& $payment->getOrder()->getBaseTotalDue() == $result->valor){
 				// neste sistema altera logo para pago
 				$payment->setTransactionId($referencia."-capture");

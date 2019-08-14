@@ -24,7 +24,10 @@ class Eupago_Multibanco_CallbackController extends Mage_Core_Controller_Front_Ac
 			default:
 				exit("método de pagamento inválido");
 		}
-					
+		
+		// devolvemos forbidden por defeito
+		http_response_code(403);
+			
 		// valida metodo de pagamento
 		if(!isset($callBack_params->mp) || $method != $metodo_callback)
 			exit("método de pagamento não corresponde ao da encomenda");
@@ -55,6 +58,7 @@ class Eupago_Multibanco_CallbackController extends Mage_Core_Controller_Front_Ac
 		
 		// marca como paga ou gera fatura
 		if($this->validaTransacao($callBack_params, $order)){
+			http_response_code(200);
 			if(class_exists('SOAPClient'))
 				$this->capture($order);	
 			else
@@ -154,123 +158,6 @@ class Eupago_Multibanco_CallbackController extends Mage_Core_Controller_Front_Ac
 			else
 				$this->marcaComoPaga($order, $callBack_params->valor, true); // -> para usar para marcar como paga sem gerar fatura			
 		}	
-	}
-	
-	// CALLBACK ANTIGO FICARÁ DEPRECATED NA PROXIMA VERSÃO
-	public function autorizeAction(){
-		
-		///// dados vindos da api para comfirmar 
-		$CallBack = $this->getRequest()->getParams();
-		$CallBack_valor = $CallBack['valor'];
-		$CallBack_referencia = $CallBack['referencia'];
-		$CallBack_chave_api = $CallBack['chave_api'];
-		$CallBack_orderId = $CallBack['identificador'];
-
-		////// dados de encomenda
-		$OrderNumber = $CallBack_orderId; //$CallBack_orderId vaem da api Eupago[order-id]
-		$order = Mage::getModel('sales/order')->load($OrderNumber, 'increment_id');
-		$valor_encomenda = $order->grand_total; //retirado do valor total da encomenda
-		
-		/////// dados do pagamento
-		$pagamento = $order->getPayment();
-		
-		// se não existir dados de pagamento antigos chama o novo callback
-		if($pagamento->eupago_referencia == null || $pagamento->eupago_referencia == "" ){
-			// carrega dados de callback e encomenda
-			$callBack_params = (object)$CallBack;
-			$method = $order->getPayment()->getMethod();
-			$metodo_callback = null;
-			switch(urldecode($callBack_params->mp)){
-				case 'PC:PT':
-					$metodo_callback = "multibanco";
-					break;
-				case 'MW:PT':
-					$metodo_callback = "mbway";
-					break;
-				default:
-					exit("método de pagamento inválido");
-			}
-						
-			// valida metodo de pagamento
-			if(!isset($callBack_params->mp) || $method != $metodo_callback)
-				exit("método de pagamento não corresponde ao da encomenda");
-			
-			// valida chave API
-			if($callBack_params->chave_api != Mage::getStoreConfig('payment/'.$metodo_callback.'/chave'))
-				exit("chave API inválida");
-			
-			// valida order_id
-			if($order->getId() == null)
-				exit("a encomenda não existe");
-
-			// valida estado da encomenda
-			if($order->getStatus() == "canceled") // devemos validar se esta completa?
-				exit("não foi possivel concluir o pagamento porque o estado da encomenda é: ".$order_status);
-			
-			// valida valor da encomenda -> comentar no caso de premitir pagamento parcial
-			if($order->getGrandTotal() != $callBack_params->valor)
-				exit ("O valor da encomenda e o valor pago não correspondem!");
-			
-			// verifica se a encomenda já está paga
-			if($order->getBaseTotalDue() == 0)
-				exit("A encomenda já se encontra paga!");
-			
-			// valida valor por pagar
-			if($order->getBaseTotalDue() < $callBack_params->valor)
-				exit("O valor a pagamento é inferior ao valor pago!");
-			
-			// marca como paga ou gera fatura
-			if($this->validaTransacao($callBack_params, $order)){
-				if(class_exists('SOAPClient'))
-					$this->capture($order);	
-				else
-					$this->marcaComoPaga($order, $callBack_params->valor, true); // -> para usar para marcar como paga sem gerar fatura			
-			}
-			return;
-		}
-			
-		/////// dados do pagamento antigos
-		$entidade = $pagamento->eupago_entidade;
-		$referencia = str_pad($pagamento->eupago_referencia, 9, "0", STR_PAD_LEFT);
-		$valor_gerado = $pagamento->eupago_montante;
-		
-		/////// gera autorizacao
-		$chave_api = Mage::getStoreConfig('payment/multibanco/chave');
-		
-		//////// Confere dados
-		$confere_montantes = (($valor_encomenda == $valor_gerado) == $CallBack_valor ? true : false);
-		$confere_referencia = ($referencia == $CallBack_referencia ? true : false);
-		$confere_chave_api = ($CallBack_chave_api == $chave_api ? true : false);
-		
-		
-		////// se tudo ok, faz o update do estado da encomenda e envia um email ao cliente
-		if($confere_montantes && $confere_chave_api && $confere_referencia){ /*futuro upgrade -> $confere_autorizacao*/
-	
-			$order->setData('state', "complete");
-			$order->setStatus("processing");
-			$order->sendOrderUpdateEmail();
-
-				//////// hack for generate invoice automatically
-				$invoice = Mage::getModel('sales/service_order', $order)->prepareInvoice();
-				if (!$invoice->getTotalQty()) {
-					Mage::throwException(Mage::helper('core')->__('Cannot create an invoice without products.'));
-				}
-				$invoice->setRequestedCaptureCase(Mage_Sales_Model_Order_Invoice::CAPTURE_OFFLINE);
-				$invoice->register();
-				$transactionSave = Mage::getModel('core/resource_transaction')
-					->addObject($invoice)
-					->addObject($invoice->getOrder());
-				$transactionSave->save();
-				////////////////
-				
-			$history = $order->addStatusHistoryComment('Order marked as complete automatically.', false);
-			$history->setIsCustomerNotified(true);
-			$order->save();
-			
-			echo "alterado para pago..";
-		}else{
-			echo "os valores de pagamento não correspondem com os da encomenda";
-		}
 	}
 	
 	private function marcaComoPaga($order,$valor_pago,$geraFatura = false){
