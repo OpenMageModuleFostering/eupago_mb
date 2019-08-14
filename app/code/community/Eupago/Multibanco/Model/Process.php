@@ -42,7 +42,11 @@ class Eupago_Multibanco_Model_Process extends Mage_Payment_Model_Method_Abstract
 			
 		$payment_method =$order->getPayment()->getMethodInstance()->getCode();
 		
-		$_SESSION['admin_quote_eupago_id'] = $quote_id;
+		if(Mage::getSingleton('admin/session')->isLoggedIn()){
+			Mage::getSingleton('admin/session')->setAdminQuoteEupagoId($quote_id);
+			$_SESSION['admin_quote_eupago_id'] = $quote_id;
+		}
+		
 		
 		if($payment_method == "multibanco"){
 			if ($quote_id != ""  ) {	

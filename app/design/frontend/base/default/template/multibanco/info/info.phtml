@@ -4,19 +4,17 @@
         <td><table width="100%" border="0" cellspacing="1" cellpadding="0">
 
                 <?php
-				//////////// REVER ISTO
-                $referencia = "";
-                if(isset($_SESSION['admin_quote_eupago_id'])){
-					$quote_id = $_SESSION['admin_quote_eupago_id'];
+                
+				$AdminQouteId = Mage::getSingleton('admin/session')->getAdminQuoteEupagoId();
+				if($AdminQouteId != null || $AdminQouteId != ""){
+					$quote_id = $AdminQouteId;
 				}else{
 					$orderId = Mage::getSingleton('checkout/session')->getLastRealOrderId();
 					$quote_id = Mage::getSingleton('checkout/session')->getQuoteId();
 				}
-				//////////////////
                 $conn = Mage::getSingleton('core/resource')->getConnection('core_read');
-			
-                if ($quote_id != "") {
-                    
+				$referencia = "";
+                if ($quote_id != "") {                   
                     $sales_flat_quote_payment = Mage::getSingleton('core/resource')->getTableName('sales_flat_quote_payment');
                     $query = $conn->query("SELECT  eupago_referencia FROM $sales_flat_quote_payment  WHERE quote_id= $quote_id");
                     $referencia = $query->fetchColumn();
@@ -33,11 +31,9 @@
 
 
     $conn = Mage::getSingleton('core/resource')->getConnection('core_read');
-      $sales_flat_order_payment = Mage::getSingleton('core/resource')->getTableName('sales_flat_order_payment');
+    $sales_flat_order_payment = Mage::getSingleton('core/resource')->getTableName('sales_flat_order_payment');
     $query = $conn->query("SELECT  max(parent_id) eupago_referencia FROM  $sales_flat_order_payment ");
     $entity_id = $query->fetchColumn();
-
-
 
     $query = $conn->query("SELECT  eupago_referencia FROM $sales_flat_order_payment  WHERE parent_id=$entity_id");
     $referencia = $query->fetchColumn();
@@ -45,14 +41,11 @@
     $entidade = $query->fetchColumn();
     $query = $conn->query("SELECT  eupago_montante FROM $sales_flat_order_payment  WHERE parent_id=$entity_id");
     $valor = $query->fetchColumn();
-     $valor = number_format($valor,'2',',','');
-    ?>
+    $valor = number_format($valor,'2',',','');
+    if(($referencia != "" || $referencia == null) && ($entidade != "" || $entidade == null) && $valor){
+	?>
 
                     <div align='center'>
-
-
-
-
 
                         <table style="margin-top: 10px;border: 1px solid #000;" width="250px" cellspacing="0" align="center">
                             <tr>
@@ -84,7 +77,8 @@
 
 
 
-<? } ?>
+<? }
+}?>
     </tr>
 
 </table></td>
