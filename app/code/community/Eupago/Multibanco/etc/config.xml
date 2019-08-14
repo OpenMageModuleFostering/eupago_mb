@@ -2,7 +2,7 @@
 <config>
     <modules>
         <Eupago_Multibanco>
-            <version>1.0.0</version>
+            <version>1.0.3</version>
         </Eupago_Multibanco>
     </modules>
     <frontend>

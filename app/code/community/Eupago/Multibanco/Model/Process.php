@@ -43,11 +43,22 @@ class Eupago_Multibanco_Model_Process extends Mage_Payment_Model_Method_Abstract
             $query = $conn->query("SELECT  eupago_referencia FROM $sales_flat_quote_payment  WHERE quote_id =$quote_id");
             $referencia = $query->fetchColumn();
 
+			
+			if($chave_api){
+				$demo = explode("-",$chave_api);
+				if($demo['0']=='demo'){
+					 $url = 'https://replica.eupago.pt/replica.eupagov3.wsdl';
+				}
+				else {
+					 $url ='https://seguro.eupago.pt/eupagov3.wsdl';
+				}	
+			}
+			
 
             if ($referencia == "") {
                 if(class_exists('SOAPClient')){
 					$arraydados = array("chave" => $chave_api, "valor" => $order_value, "id" => $id); //cada canal tem a sua chave
-					$client = @new SoapClient('http://replica.eupago.pt/replica.eupagov1.wsdl', array('cache_wsdl' => WSDL_CACHE_NONE)); // chamada do serviço SOAP
+					$client = @new SoapClient($url, array('cache_wsdl' => WSDL_CACHE_NONE)); // chamada do serviço SOAP
 					$result = $client->gerarReferenciaMB($arraydados);
 					$query = "UPDATE $sales_flat_order_payment SET  eupago_montante =    $order_value, eupago_entidade =    $result->entidade, eupago_referencia =    $result->referencia  WHERE parent_id =$entity";
 					$query = "UPDATE $sales_flat_quote_payment SET  eupago_montante =    $order_value, eupago_entidade =    $result->entidade, eupago_referencia =    $result->referencia  WHERE quote_id =$quote_id";
