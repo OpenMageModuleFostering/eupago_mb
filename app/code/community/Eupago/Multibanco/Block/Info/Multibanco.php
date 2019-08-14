@@ -25,8 +25,10 @@ class Eupago_Multibanco_Block_Info_Multibanco extends Mage_Payment_Block_Info
 		$multibanco_data = (Object)$info['additional_information'];
 		if(!isset($multibanco_data->referencia))
 			$multibanco_data =  (Object)array("entidade" => $info['eupago_entidade'], "referencia" => str_pad($info['eupago_referencia'], 9, "0", STR_PAD_LEFT), "valor"=> $info['eupago_montante']);
-        
-		return $multibanco_data;
+        if($multibanco_data->referencia > 0)			
+			return $multibanco_data;
+		else
+			return null;
 	}
     
     public function getMethod()
