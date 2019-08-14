@@ -30,6 +30,11 @@
                     <frontName>Eupago</frontName>
                 </args>
             </Eupago_Multibanco>
+			<checkout>
+				<rewrite>
+					<checkout_onepage_success>Eupago_Multibanco_Block_Success</checkout_onepage_success>
+				</rewrite>
+			</checkout>
         </routers> 
     </frontend>
     <adminhtml>
@@ -114,11 +119,6 @@
             <multibanco>
                 <class>Eupago_Multibanco_Block</class>
             </multibanco>
-			<checkout>
-				<rewrite>
-					<checkout_onepage_success>Eupago_Multibanco_Block_Success</checkout_onepage_success>
-				</rewrite>
-			</checkout>
         </blocks>
         <helpers>
             <multibanco>

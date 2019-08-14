@@ -6,7 +6,7 @@
                 <?php
                 
 				$AdminQouteId = Mage::getSingleton('admin/session')->getAdminQuoteEupagoId();
-				if($AdminQouteId != null || $AdminQouteId != ""){
+				if($AdminQouteId != null && $AdminQouteId != ""){
 					$quote_id = $AdminQouteId;
 				}else{
 					$orderId = Mage::getSingleton('checkout/session')->getLastRealOrderId();
@@ -42,7 +42,7 @@
     $query = $conn->query("SELECT  eupago_montante FROM $sales_flat_order_payment  WHERE parent_id=$entity_id");
     $valor = $query->fetchColumn();
     $valor = number_format($valor,'2',',','');
-    if(($referencia != "" || $referencia == null) && ($entidade != "" || $entidade == null) && $valor){
+    if(($referencia != "" && $referencia != null) && ($entidade != "" && $entidade != null) && $valor){
 	?>
 
                     <div align='center'>

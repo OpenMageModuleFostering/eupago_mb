@@ -81,7 +81,7 @@ if ($order->getPayment()->getMethod() == 'multibanco') {
 ?>
 
 
-
+<?php if($order->getPayment()->getMethod() == 'multibanco'){?> 
 
 <p> Para pagar esta encomenda atrav&eacute;s da Rede de Caixas Autom&aacute;ticas Multibanco e introduza os seguintes dados:
 <div align='center'>
@@ -114,11 +114,8 @@ if ($order->getPayment()->getMethod() == 'multibanco') {
     </table>
 
 </div>    
-
-
-
 </p>
-
+<?php } ?>
 <div class="buttons-set">
     <button type="button" class="button" title="<?php echo $this->__('Continue Shopping') ?>" onclick="window.location='<?php echo $this->getUrl() ?>'"><span><span><?php echo $this->__('Continue Shopping') ?></span></span></button>
 </div>
