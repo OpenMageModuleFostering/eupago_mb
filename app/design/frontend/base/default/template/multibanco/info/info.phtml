@@ -4,11 +4,17 @@
         <td><table width="100%" border="0" cellspacing="1" cellpadding="0">
 
                 <?php
+				//////////// REVER ISTO
                 $referencia = "";
-                $orderId = Mage::getSingleton('checkout/session')->getLastRealOrderId();
-                $quote_id = Mage::getSingleton('checkout/session')->getQuoteId();
+                if(isset($_SESSION['admin_quote_eupago_id'])){
+					$quote_id = $_SESSION['admin_quote_eupago_id'];
+				}else{
+					$orderId = Mage::getSingleton('checkout/session')->getLastRealOrderId();
+					$quote_id = Mage::getSingleton('checkout/session')->getQuoteId();
+				}
+				//////////////////
                 $conn = Mage::getSingleton('core/resource')->getConnection('core_read');
-
+			
                 if ($quote_id != "") {
                     
                     $sales_flat_quote_payment = Mage::getSingleton('core/resource')->getTableName('sales_flat_quote_payment');
