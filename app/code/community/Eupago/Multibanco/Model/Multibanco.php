@@ -36,8 +36,11 @@ class Eupago_Multibanco_Model_Multibanco extends Mage_Payment_Model_Method_Abstr
 	  
 	public function order(Varien_Object $payment, $amount)
     {
-		
-        $result = $this->soapApiGeraRefMB($payment,$amount);
+		if(class_exists('SOAPClient')){
+			$result = $this->soapApiGeraRefMB($payment,$amount);
+		}else{
+			$result = $this->restApiGeraRefMB($payment,$amount);
+		}
 
         if($result == false) {
             $errorMsg = $this->_getHelper()->__('Error Processing the request');
@@ -126,6 +129,16 @@ class Eupago_Multibanco_Model_Multibanco extends Mage_Payment_Model_Method_Abstr
 		return 'https://seguro.eupago.pt/'.$version.'.wsdl';
 	}
 	
+	private function getRestUrl(){
+		$chave = $this->getConfigData('chave');
+		$demo = explode("-",$chave);
+
+		if($demo[0] == 'demo'){
+			return 'https://replica.eupago.pt/clientes/rest_api/multibanco/create';
+		}
+		return 'https://seguro.eupago.pt/clientes/rest_api/multibanco/create';
+	}
+	
 	
 	// faz pedido à eupago via SOAP Para gerar Referencias Multibanco
 	private function soapApiGeraRefMB(Varien_Object $payment, $amount){
@@ -176,29 +189,44 @@ class Eupago_Multibanco_Model_Multibanco extends Mage_Payment_Model_Method_Abstr
 		return $result;
 	}
 	
+	// faz pedido à eupago via REST Para gerar Referencias Multibanco
+	private function restApiGeraRefMB(Varien_Object $payment, $amount){
 		
-	// public function assignData($data){
-        // if (!($data instanceof Varien_Object)) {
-            // $data = new Varien_Object($data);
-        // }
-        // $info = $this->getInfoInstance();
-		// $info->setAdditionalInformation('multibanco_phone_number', $data->getMultibancoPhoneNumber());
-
-        // return $this;
-    // }
- 
- 
+		$per_dup = $this->getConfigData('per_dup'); 
+		
+		$n_dias = $this->getConfigData('payment_deadline');
+		
+		$order = $payment->getOrder();
+		
+		$client = new Varien_Http_Client($this->getRestUrl());
+		$client->setMethod(Varien_Http_Client::POST);
+		$client->setParameterPost('chave', $this->getConfigData('chave'));
+		$client->setParameterPost('valor', $amount);
+		$client->setParameterPost('id', $order->getIncrementId());
+		if($per_dup != 1 || (is_numeric($n_dias) && $n_dias > 0)){
+			$data_inicio = date("Y-m-d");	
+			$data_fim = (is_numeric($n_dias) && $n_dias > 0) ? date('Y-m-d', strtotime('+'.$n_dias.' day', strtotime($data_inicio))) : "2099-12-31";
+			$per_dup =($per_dup == true) ? 1 : 0;
+			$client->setParameterPost('data_inicio', $data_inicio);
+			$client->setParameterPost('data_fim', $data_fim);
+			$client->setParameterPost('per_dup', $per_dup);
+		}
+		
+		$result = $client->request();
+		if ($result->isSuccessful()){
+			return json_decode($result->getBody());
+		}else{
+			Mage::throwException("Ocorreu um erro ao gerar a referência multibanco");
+			return false;
+		}
+					
+	}
+	
+		 
     public function validate(){
         parent::validate();
- 
-        $info = $this->getInfoInstance();
-		// acrescentar as validações de valor caso existam
-        // $no = $info->getAdditionalInformation('multibanco_phone_number');
 		
-        // if(empty($no) || !is_numeric($no) || strlen ($no) != 9){
-            // $errorCode = 'invalid_data';
-            // $errorMsg = $this->_getHelper()->__('O campo Número Multibanco parece ser inválido. Por favor verifique');
-        // }
+		// acrescentar as validações de valor caso existam
  
         // if(isset($errorMsg)){
             // Mage::throwException($errorMsg);
@@ -206,5 +234,5 @@ class Eupago_Multibanco_Model_Multibanco extends Mage_Payment_Model_Method_Abstr
 		
         return $this;
     }
-	 
+		 
  }

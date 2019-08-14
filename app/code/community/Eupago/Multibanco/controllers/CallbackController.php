@@ -47,21 +47,110 @@ class Eupago_Multibanco_CallbackController extends Mage_Core_Controller_Front_Ac
 		
 		// marca como paga ou gera fatura
 		if($this->validaTransacao($callBack_params, $order)){
-			//$this->marcaComoPaga($order, $callBack_params->valor); // -> para usar para marcar como paga sem gerar fatura
-			$this->capture($order);			
+			if(class_exists('SOAPClient'))
+				$this->capture($order);	
+			else
+				$this->marcaComoPaga($order, $callBack_params->valor, true); // -> para usar para marcar como paga sem gerar fatura		
 		}	
 	}
 	
-	private function marcaComoPaga($order,$valor_pago){
+	// CALLBACK ANTIGO FICARÁ DEPRECATED NA PROXIMA VERSÃO
+	public function autorizeAction(){
 		
+		///// dados vindos da api para comfirmar 
+		$CallBack = $this->getRequest()->getParams();
+		$CallBack_valor = $CallBack['valor'];
+		$CallBack_referencia = $CallBack['referencia'];
+		$CallBack_chave_api = $CallBack['chave_api'];
+		$CallBack_orderId = $CallBack['identificador'];
+		$CallBack_autorizacao = $CallBack['autorizacao'];
+
+		
+		////// dados de encomenda
+		$OrderNumber = $CallBack_orderId; //$CallBack_orderId vaem da api Eupago[order-id]
+		$order = Mage::getModel('sales/order')->load($OrderNumber, 'increment_id');
+		$valor_encomenda = $order->grand_total; //retirado do valor total da encomenda
+		
+		/////// dados do pagamento
+		$pagamento = $order->getPayment();
+		
+		// se não existir dados de pagamento antigos chama o novo callback
+		if($pagamento->eupago_referencia == null || $pagamento->eupago_referencia == "" ){
+			$this->multibancoAction();
+			return;
+		}
+			
+		/////// dados do pagamento antigos
+		$entidade = $pagamento->eupago_entidade;
+		$referencia = str_pad($pagamento->eupago_referencia, 9, "0", STR_PAD_LEFT);
+		$valor_gerado = $pagamento->eupago_montante;
+		
+		/////// gera autorizacao
+		$chave_api = Mage::getStoreConfig('payment/multibanco/chave');
+		$autorizacao = md5(date('Y-m-d').$chave_api);
+		
+		//////// Confere dados
+		$confere_montantes = (($valor_encomenda == $valor_gerado) == $CallBack_valor ? true : false);
+		$confere_autorizacao = ($autorizacao == $CallBack_autorizacao ? true : false);
+		$confere_referencia = ($referencia == $CallBack_referencia ? true : false);
+		$confere_chave_api = ($CallBack_chave_api == $chave_api ? true : false);
+		
+		
+		////// se tudo ok, faz o update do estado da encomenda e envia um email ao cliente
+		if($confere_montantes && $confere_chave_api && $confere_referencia){ /*futuro upgrade -> $confere_autorizacao*/
+	
+			$order->setData('state', "complete");
+			$order->setStatus("processing");
+			$order->sendOrderUpdateEmail();
+
+				//////// hack for generate invoice automatically
+				$invoice = Mage::getModel('sales/service_order', $order)->prepareInvoice();
+				if (!$invoice->getTotalQty()) {
+					Mage::throwException(Mage::helper('core')->__('Cannot create an invoice without products.'));
+				}
+				$invoice->setRequestedCaptureCase(Mage_Sales_Model_Order_Invoice::CAPTURE_OFFLINE);
+				$invoice->register();
+				$transactionSave = Mage::getModel('core/resource_transaction')
+					->addObject($invoice)
+					->addObject($invoice->getOrder());
+				$transactionSave->save();
+				////////////////
+				
+			$history = $order->addStatusHistoryComment('Order marked as complete automatically.', false);
+			$history->setIsCustomerNotified(true);
+			$order->save();
+			
+			echo "alterado para pago..";
+		}else{
+			echo "os valores de pagamento não correspondem com os da encomenda";
+		}
+	}
+	
+	private function marcaComoPaga($order,$valor_pago,$geraFatura = false){
 		$order->setData('state', "complete");
 		$order->setStatus("processing");
 		$order->sendOrderUpdateEmail();
 		$history = $order->addStatusHistoryComment('Encomenda paga por MULTIBANCO.', false);
 		$history->setIsCustomerNotified(true);
+		if($geraFatura)
+			$this->geraFatura($order);
 		$order->setTotalPaid($valor_pago);
 		$order->save();
-		echo "estado alterado para processing com sucesso";
+		echo "estado alterado para processing com sucesso. e gerada fatura sem transação";
+	}
+	
+	private function geraFatura($order){
+		//////// hack para gerar fatura sem transação automaticamente
+		$invoice = Mage::getModel('sales/service_order', $order)->prepareInvoice();
+		if (!$invoice->getTotalQty()) {
+			Mage::throwException(Mage::helper('core')->__('Cannot create an invoice without products.'));
+		}
+		$invoice->setRequestedCaptureCase(Mage_Sales_Model_Order_Invoice::CAPTURE_OFFLINE);
+		$invoice->register();
+		$transactionSave = Mage::getModel('core/resource_transaction')
+			->addObject($invoice)
+			->addObject($invoice->getOrder());
+		$transactionSave->save();
 	}
 	
 	private function validaTransacao($CallBack, $order){
