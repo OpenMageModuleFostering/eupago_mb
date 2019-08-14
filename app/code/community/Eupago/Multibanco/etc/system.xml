@@ -1,125 +1,92 @@
 <?xml version="1.0"?>
 <config>
-    <sections>		
+   <sections>
         <payment>
             <groups>
-                <multibanco translate="label" module="payment">                    
-                    <label><![CDATA[euPago  - Pagamentos por Refer&ecirc;ncias Multibanco (Oficial)]]>
-                    </label>
-                    <frontend_type>text</frontend_type>
-                    <sort_order>1</sort_order>
+                <multibanco translate="label" module="paygate">
+                    <label>Eupago Multibanco</label>
+                    <sort_order>10</sort_order>
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
-                    <show_in_store>1</show_in_store>                   
+                    <show_in_store>0</show_in_store>
                     <fields>
                         <active translate="label">
-                            <label>Ativo</label>
+                            <label>Enabled</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </active>
+                        <title translate="label">
+                            <label>Title</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>2</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </title>
+						<chave translate="label">
+                            <label>API key</label>
+                            <comment>Se ainda não tiver uma chave <![CDATA[ <a target="_blank" href="https://eupago.pt/registo?magento#registo_form">registe-se aqui</a> ]]></comment>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>3</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </chave>
+						<order_status translate="label">
+                            <label>New order status</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_order_status_new</source_model>
+                            <sort_order>4</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </order_status>
+						<mostra_icon translate="label">
+                            <label>Show icon</label>
+							<comment>Mostra icon do multibanco na listagem de metodos de pagamento antes do titulo</comment>
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
                             <sort_order>5</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                        </active>
-                        <order_status translate="label">                            
-                            <label>Estado da Encomenda</label>
-                            <frontend_type>select</frontend_type>
-                            <source_model>adminhtml/system_config_source_order_status</source_model>
-                            <sort_order>10</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                        </order_status>
-                        <sort_order translate="label">                            
-                            <label><![CDATA[Ordem de apresenta&ccedil;&atilde;o]]>
-                            </label>
-                            <frontend_type>text</frontend_type>
-                            <sort_order>15</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                        </sort_order>                        
-                        <title translate="label">
-                            <label><![CDATA[T&iacute;tulo a apresentar no Website]]>
-                            </label>
-                            <frontend_type>text</frontend_type>
-                            <sort_order>20</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                        </title>
-                        <chave translate="label">
-                            <label>Chave da API</label>
-                            <comment>Se ainda não tiver uma chave <![CDATA[ <a target="_blank" href="https://eupago.pt/registo?magento#registo_form">clique aqui</a> ]]></comment>
-                            <frontend_type>text</frontend_type>
-                            <sort_order>25</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                        </chave>
-                        <min translate="label">
-                            <label>Valor Mínimo da Encomenda</label>
-                            <frontend_type>text</frontend_type>
-                            <validate>validate-number</validate>
-                            <sort_order>30</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                        </min>
-                        <max translate="label">
-                            <label>Valor Máximo da Encomenda</label>
-                            <frontend_type>text</frontend_type>
-                            <validate>validate-number</validate>
-                            <sort_order>35</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                        </max>
-				
-                        <mensagem translate="label">
-                            <label><![CDATA[Instru&ccedil;&otilde;es]]>
-                            </label>
-                            <frontend_type>text</frontend_type>
-                            <sort_order>40</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                        </mensagem>                  
-                        <allowspecific translate="label">
-                            <label><![CDATA[Pagamento para os Pa&iacute;ses]]>
-                            </label>
-                            <frontend_type>allowspecific</frontend_type>
-                            <sort_order>45</sort_order>
-                            <source_model>adminhtml/system_config_source_payment_allspecificcountries</source_model>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                        </allowspecific>
-                        <specificcountry translate="label">
-                            <label><![CDATA[Pagamento para Pa&iacute;ses Espec&iacute;ficos]]>
-                            </label>
-                            <frontend_type>multiselect</frontend_type>
-                            <sort_order>50</sort_order>
-                            <source_model>adminhtml/system_config_source_country</source_model>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                        </specificcountry>	
-                        <payment_action translate="label">
-                            <label>Payment Action</label>
-                            <frontend_type>select</frontend_type>
-                            <source_model>multibanco/paymentAction</source_model>
-                            <sort_order>55</sort_order>
-                            <show_in_default>0</show_in_default>
-                            <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>
-                        </payment_action>					
+                        </mostra_icon>
+						<frontend_template translate="label">
+                            <label>Frontend Template</label>
+							<comment>Selecione o tema e defina como os seus clientes vêm este método de pagamento</comment>
+                            <frontend_type>select</frontend_type>
+                            <source_model>multibanco/system_config_template</source_model>
+                            <sort_order>6</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </frontend_template>
+						<per_dup translate="label">
+                            <label>Allow duplicated payments</label>
+							<comment>Escolha sim se pretende que apenas seja possivel pagar uma referência várias vezes</comment>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>7</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </per_dup>
+						<payment_deadline translate="label">
+                            <label>Payment Deadline</label>
+							<comment>Se pretender que a referência tenha uma validade, preencha o número de dias que a referência está disponível para pagamento</comment>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>8</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </payment_deadline>
                     </fields>
                 </multibanco>
             </groups>
         </payment>
-		<info>
-			<label><![CDATA[Pagamento para Pa&iacute;ses Espec&iacute;ficos]]></label>
-		</info>
     </sections>
 </config>

@@ -3,11 +3,11 @@
     "type": "magento-module",
     "license": "GNU-General-Public-License-(GPL)",
     "homepage": "",
-    "description": "Modulo de pagamento que gera referencias multibanco.",
+    "description": "Pagamento por Multibanco",
     "authors": [
     {
-        "name": "euPago",
-        "email": "dev@eupago.pt"
+        "name": "Eupago",
+        "email": "suporte@eupago.pt"
     }
 ],
     "suggest": {

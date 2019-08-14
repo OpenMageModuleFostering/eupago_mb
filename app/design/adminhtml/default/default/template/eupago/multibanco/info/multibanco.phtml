@@ -1,0 +1,9 @@
+<ul id="payment_info_<?php echo $this->getMethodCode() ?>">
+    <li>
+	<h4>Multibanco</h4>
+	<?php $multibanco_data = $this->getMultibancoData(); ?>
+    <?php echo $this->__('Entidade: ').$multibanco_data->entidade."</br>" ?>
+	<?php echo $this->__('Referência: ').chunk_split($multibanco_data->referencia,3," ")."</br>"  ?>
+	<?php echo $this->__('Valor: ').number_format($multibanco_data->valor,2)." EUR" ?>
+    </li>
+</ul>

@@ -1,61 +1,90 @@
 <?php
- 
-class Eupago_Multibanco_CallbackController extends Mage_Core_Controller_Front_Action { // extends Mage_Payment_Model_Method_Abstract 
+/*
+Mygateway Payment Controller
+By: Junaid Bhura
+www.junaidbhura.com
+*/
+
+class Eupago_Multibanco_CallbackController extends Mage_Core_Controller_Front_Action {
 	
-	public function autorizeAction(){
+	public function multibancoAction() {
 		
-		///// dados vindos da api para comfirmar 
-		$CallBack = $this->getRequest()->getParams();
-		$CallBack_valor = $CallBack['valor'];
-		$CallBack_referencia = $CallBack['referencia'];
-		$CallBack_chave_api = $CallBack['chave_api'];
-		$CallBack_orderId = $CallBack['identificador'];
-		$CallBack_autorizacao = $CallBack['autorizacao'];
+		// tirar de comentário se pretender validar apenas pedidos post
+		// if(!$this->getRequest()->isPost()) 
+			// exit("pedido de callback deve ser post");
+		
+		// carrega dados de callback e encomenda
+		$callBack_params = (object)$this->getRequest()->getParams();
+		$order = Mage::getModel('sales/order')->load($callBack_params->identificador, 'increment_id');		
+		
+		// valida metodo de pagamento
+		if(!isset($callBack_params->mp) || $callBack_params->mp != 'PC:PT')
+			exit("método de pagamento inválido");
+		
+		// valida chave API
+		if($callBack_params->chave_api != Mage::getStoreConfig('payment/multibanco/chave'))
+			exit("chave API inválida");
+		
+		// valida order_id
+		if($order->getId() == null)
+			exit("a encomenda não existe");
 
+		// valida estado da encomenda
+		if($order->getStatus() == "canceled") // devemos validar se esta completa?
+			exit("não foi possivel concluir o pagamento porque o estado da encomenda é: ".$order_status);
 		
-		////// dados de encomenda
-		$OrderNumber = $CallBack_orderId; //$CallBack_orderId vaem da api Eupago[order-id]
-		$order = Mage::getModel('sales/order')->load($OrderNumber, 'increment_id');
-		$valor_encomenda = $order->grand_total; //retirado do valor total da encomenda
+		// valida valor da encomenda -> comentar no caso de premitir pagamento parcial
+		if($order->getGrandTotal() != $callBack_params->valor)
+			exit ("O valor da encomenda e o valor pago não correspondem!");
 		
-		/////// dados do pagamento
-		$pagamento = $order->getPayment();
-		$entidade = $pagamento->eupago_entidade;
-		$referencia = $pagamento->eupago_referencia;
-		$valor_gerado = $pagamento->eupago_montante;
+		// verifica se a encomenda já está paga
+		if($order->getBaseTotalDue() == 0)
+			exit("A encomenda já se encontra paga!");
 		
-		/////// gera autorizacao
-		$chave_api = Mage::getModel('multibanco/process')->getConfigData('chave');
-		$autorizacao = md5(date('Y-m-d').$chave_api);
+		// valida valor por pagar
+		if($order->getBaseTotalDue() < $callBack_params->valor)
+			exit("O valor a pagamento é inferior ao valor pago!");
 		
-		//////// Confere dados
-		$confere_montantes = (($valor_encomenda == $valor_gerado) == $CallBack_valor ? true : false);
-		$confere_autorizacao = ($autorizacao == $CallBack_autorizacao ? true : false);
-		$confere_referencia = ($referencia == $CallBack_referencia ? true : false);
-		$confere_chave_api = ($CallBack_chave_api == $chave_api ? true : false);
-		
-		////// se tudo ok, faz o update do estado da encomenda e envia um email ao cliente
-		if($confere_montantes && $confere_chave_api && $confere_referencia){ /*futuro upgrade -> $confere_autorizacao*/
-			$order->setData('state', "complete");
-			$order->setStatus("processing");
-			$order->sendOrderUpdateEmail();
-
-				//////// hack for generate invoice automatically
-				$invoice = Mage::getModel('sales/service_order', $order)->prepareInvoice();
-				if (!$invoice->getTotalQty()) {
-					Mage::throwException(Mage::helper('core')->__('Cannot create an invoice without products.'));
-				}
-				$invoice->setRequestedCaptureCase(Mage_Sales_Model_Order_Invoice::CAPTURE_ONLINE);
-				$invoice->register();
-				$transactionSave = Mage::getModel('core/resource_transaction')
-					->addObject($invoice)
-					->addObject($invoice->getOrder());
-				$transactionSave->save();
-				////////////////
-				
-			$history = $order->addStatusHistoryComment('Order marked as complete automatically.', false);
-			$history->setIsCustomerNotified(true);
-			$order->save();
-		}
+		// marca como paga ou gera fatura
+		if($this->validaTransacao($callBack_params, $order)){
+			//$this->marcaComoPaga($order, $callBack_params->valor); // -> para usar para marcar como paga sem gerar fatura
+			$this->capture($order);			
+		}	
 	}
+	
+	private function marcaComoPaga($order,$valor_pago){
+		
+		$order->setData('state', "complete");
+		$order->setStatus("processing");
+		$order->sendOrderUpdateEmail();
+		$history = $order->addStatusHistoryComment('Encomenda paga por MULTIBANCO.', false);
+		$history->setIsCustomerNotified(true);
+		$order->setTotalPaid($valor_pago);
+		$order->save();
+		echo "estado alterado para processing com sucesso";
+	}
+	
+	private function validaTransacao($CallBack, $order){
+			
+		/////// dados do pagamento
+		$payment = $order->getPayment();
+		
+		///// dados transaction
+		$transaction = $payment->getTransaction(intval($CallBack->referencia));
+		if($transaction == false){
+			echo "a referencia não corresponde a nenhuma transação desta encomenda.";
+			return false;
+		}
+		
+		return true;
+	}
+	
+	// gera invoice
+	private function capture($order){	
+		$payment = $order->getPayment();
+		$payment->capture();
+		$order->save();
+		echo "Pagamento foi capturado com sucesso. e a fatura foi gerada";
+	}
+	
 }

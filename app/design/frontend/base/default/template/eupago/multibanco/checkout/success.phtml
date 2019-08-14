@@ -1,0 +1,99 @@
+<?php
+/**
+ * Magento
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/afl-3.0.php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@magento.com so we can send you a copy immediately.
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    design
+ * @package     base_default
+ * @copyright   Copyright (c) 2006-2016 X.commerce, Inc. and affiliates (http://www.magento.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ */
+?>
+<div class="page-title">
+    <h1><?php echo $this->__('Your order has been received.') ?></h1>
+</div>
+<?php echo $this->getMessagesBlock()->toHtml() ?>
+<h2 class="sub-title"><?php echo $this->__('Thank you for your purchase!') ?></h2>
+
+<?php if ($this->getOrderId()):?>
+<?php if ($this->getCanViewOrder()) :?>
+    <p><?php echo $this->__('Your order # is: %s.', sprintf('<a href="%s">%s</a>', $this->escapeHtml($this->getViewOrderUrl()), $this->escapeHtml($this->getOrderId()))) ?></p>
+<?php  else :?>
+    <p><?php echo $this->__('Your order # is: %s.', $this->escapeHtml($this->getOrderId())) ?></p>
+<?php endif;?>
+    <p><?php echo $this->__('You will receive an order confirmation email with details of your order and a link to track its progress.') ?></p>
+<?php if ($this->getCanViewOrder() && $this->getCanPrintOrder()) :?>
+    <p>
+        <?php echo $this->__('Click <a href="%s" onclick="this.target=\'_blank\'">here to print</a> a copy of your order confirmation.', $this->getPrintUrl()) ?>
+        <?php echo $this->getChildHtml() ?>
+    </p>
+<?php endif;?>
+<?php endif;?>
+
+<?php if ($this->getAgreementRefId()): ?>
+    <p><?php echo $this->__('Your billing agreement # is: %s.', sprintf('<a href="%s">%s</a>', $this->escapeHtml($this->getAgreementUrl()), $this->escapeHtml($this->getAgreementRefId())))?></p>
+<?php endif;?>
+
+<?php if ($profiles = $this->getRecurringProfiles()):?>
+<p><?php echo $this->__('Your recurring payment profiles:'); ?></p>
+<ul class="disc">
+<?php foreach($profiles as $profile):?>
+<?php $profileIdHtml = ($this->getCanViewProfiles() ? sprintf('<a href="%s">%s</a>', $this->escapeHtml($this->getProfileUrl($profile)), $this->escapeHtml($this->getObjectData($profile, 'reference_id'))) : $this->escapeHtml($this->getObjectData($profile, 'reference_id')));?>
+    <li><?php echo $this->__('Payment profile # %s: "%s".', $profileIdHtml, $this->escapeHtml($this->getObjectData($profile, 'schedule_description')))?></li>
+<?php endforeach;?>
+</ul>
+<?php endif;?>
+
+<?php
+ $multibanco_data = $this->getMultibancoData(); 
+	if(isset($multibanco_data->referencia) && $multibanco_data->referencia != ""){?>
+		<div style="margin: 20px;" align='center'>
+			<table style="width:100%; max-width:400px; padding:5px; font-size: 11px; color: #374953; margin:0 auto;">
+				<tbody>
+					<tr>
+						<td style="font-size: 12px; border-top: 0px; border-left: 0px; border-right: 0px; border-bottom: 1px solid #45829F; padding:3px; background-color: #45829F; color: White; height:25px; line-height:25px" colspan="3"><div align="center"><?php echo $this->__('Pagamento por Multibanco ou Homebanking') ?></div></td>
+					</tr>
+					<tr style="background-color:#f1f1f1;">
+						<td style="padding:8px 0;" rowspan="3"><div align="center"><img src="<?php echo $this->getSkinUrl('images/eupago/multibanco/eupago_mb_p.png'); ?>" alt="euPago" /></div></td>
+						<td style="padding:10px 2px 2px 2px; font-weight:bold; text-align:left"><?php echo $this->__('Entidade') ?></td>
+						<td style="padding:10px 2px 2px 2px;  text-align:left"><?php echo $multibanco_data->entidade; ?></td>
+					</tr>
+					<tr style="background-color:#f1f1f1;">
+						<td style=" padding:2px; font-weight:bold; text-align:left"><?php echo $this->__('Referência') ?></td>
+						<td style=" padding:2px; text-align:left"><?php echo chunk_split($multibanco_data->referencia,3,' '); ?></td>
+					</tr>
+					<tr style="background-color:#f1f1f1;">
+						<td style="padding:2px; padding-bottom:10px; font-weight:bold; text-align:left"><?php echo $this->__('Valor') ?></td>
+						<td style="padding:2px; padding-bottom:10px; text-align:left"><?php echo number_format($multibanco_data->valor,2).' EUR'; ?></td>
+					</tr>
+					<tr>
+						<td style="font-size: xx-small; padding:0; border: 0px; text-align:center;" colspan="3"><?php echo $this->__('O ticket obtido na maquina automática faz prova de pagamento.') ?></td>
+					</tr>
+					<?php if(isset($multibanco_data->data_limite) && $multibanco_data->data_limite != ''){ ?>
+						<tr>
+							<td style="font-size: xx-small; color:#dd0000; line-height: 10px; padding:0; border: 0px; text-align:center;" colspan="3"><?php echo $this->__('Data limite de pagamento') ?> : </span><?php echo $multibanco_data->data_limite ?></td>
+						</tr>
+					<?php } ?>
+				</tbody>
+			</table>
+		</div>
+<?php } ?>
+
+<div class="buttons-set">
+    <button type="button" class="button" title="<?php echo Mage::helper('core')->quoteEscape($this->__('Continue Shopping')) ?>" onclick="window.location='<?php echo $this->getUrl() ?>'"><span><span><?php echo $this->__('Continue Shopping') ?></span></span></button>
+</div>

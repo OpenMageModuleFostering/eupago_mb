@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <config>
-    <modules>
-        <Eupago_Multibanco>
-            <active>true</active>
-            <codePool>community</codePool>
-            <depends>
-                <Mage_Payment />
+	<modules>
+		<Eupago_Multibanco>
+			<active>true</active>
+			<codePool>community</codePool>
+			<depends>
+                     <Mage_Payment />
             </depends>
-        </Eupago_Multibanco>
-    </modules>
-</config> 
+		</Eupago_Multibanco>
+	</modules>
+</config>
