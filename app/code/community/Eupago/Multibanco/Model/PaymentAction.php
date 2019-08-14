@@ -40,5 +40,6 @@ class Eupago_Multibanco_Model_PaymentAction
                 'label' => Mage::helper('multibanco')->__('Order')
             ),
         );
+		echo ("passou no payment action");
     }
 }

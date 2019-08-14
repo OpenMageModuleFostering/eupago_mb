@@ -77,41 +77,47 @@ if ($order->getPayment()->getMethod() == 'multibanco') {
     $query = $conn->query("SELECT  eupago_montante FROM $sales_flat_order_payment  WHERE parent_id=$order->entity_id");
     $valor = $query->fetchColumn();
     $valor = number_format($valor,'2',',','');
-    ?>
-    <p> Para pagar esta encomenda atrav&eacute;s da Rede de Caixas Autom&aacute;ticas Multibanco e introduza os seguintes dados:
-    <div align='center'>
+}
+?>
 
-        <table style="margin-top: 10px;border: 1px solid #000;" width="450px" cellspacing="0" align="center">
-            <tr>
-                <td colspan="2" style="height:25px;vertical-align:center; text-align:center">
-                    <img src="https://seguro.eupago.pt/repositorio/imagens/eupagomultibanco.png" alt="euPago Multibanco" height="25" />
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2" style="height:25px;vertical-align:center;background-color:#3a87ad;font-size:small;text-align:center;color:#ebebeb;">
-                    Multibanco (Pagamento de Compras\Servi&ccedil;os)</td>
-            </tr>
-            <tr>
-                <td align="left" style="font-size:small;font-weight:bold;padding-left:15px;">Entidade:</td>
-                <td align="left" style="font-size:small;"><?php echo $entidade; ?></td>
-            </tr>
-            <tr>
-                <td align="left" style="font-size:small;font-weight:bold;padding-left:15px;">Refer&ecirc;ncia:</td>
-                <td align="left" style="font-size:small;"><?php echo $referencia; ?> </td>
-            </tr>
-            <tr>
-                <td align="left" style="font-size:small;font-weight:bold;padding-left:15px;">Valor:</td>
-                <td align="left" style="font-size:small;"><?php echo $valor; ?> EUR </td>
-            </tr>
-            <tr>
-                <td colspan="2" style="height:30px;vertical-align:center;background-color:#3a87ad;font-size:small;text-align:center;color:#ebebeb;">O tal&atilde;o emitido pela caixa autom&aacute;tica faz de prova de pagamento.<br/>Conserve-o.</td>
-            </tr>
-        </table>
 
-    </div>
 
-    </p>
-<?}?>
+
+<p> Para pagar esta encomenda atrav&eacute;s da Rede de Caixas Autom&aacute;ticas Multibanco e introduza os seguintes dados:
+<div align='center'>
+
+    <table style="margin-top: 10px;border: 1px solid #000;" width="450px" cellspacing="0" align="center">
+        <tr>
+            <td colspan="2" style="height:25px;vertical-align:center; text-align:center">
+                <img src="https://seguro.eupago.pt/repositorio/imagens/eupagomultibanco.png" alt="euPago Multibanco" height="25" />
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" style="height:25px;vertical-align:center;background-color:#3a87ad;font-size:small;text-align:center;color:#ebebeb;">
+                Multibanco (Pagamento de Compras\Servi&ccedil;os)</td>
+        </tr>
+        <tr>
+            <td align="left" style="font-size:small;font-weight:bold;padding-left:15px;">Entidade:</td>
+            <td align="left" style="font-size:small;"><?php echo $entidade; ?></td>
+        </tr>
+        <tr>
+            <td align="left" style="font-size:small;font-weight:bold;padding-left:15px;">Refer&ecirc;ncia:</td>
+            <td align="left" style="font-size:small;"><?php echo $referencia; ?> </td>
+        </tr>
+        <tr>
+            <td align="left" style="font-size:small;font-weight:bold;padding-left:15px;">Valor:</td>
+            <td align="left" style="font-size:small;"><?php echo $valor; ?> EUR </td>
+        </tr>
+        <tr>
+            <td colspan="2" style="height:30px;vertical-align:center;background-color:#3a87ad;font-size:small;text-align:center;color:#ebebeb;">O tal&atilde;o emitido pela caixa autom&aacute;tica faz de prova de pagamento.<br/>Conserve-o.</td>
+        </tr>
+    </table>
+
+</div>    
+
+
+
+</p>
 
 <div class="buttons-set">
     <button type="button" class="button" title="<?php echo $this->__('Continue Shopping') ?>" onclick="window.location='<?php echo $this->getUrl() ?>'"><span><span><?php echo $this->__('Continue Shopping') ?></span></span></button>

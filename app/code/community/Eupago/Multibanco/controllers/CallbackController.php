@@ -1,5 +1,5 @@
 <?php
-
+ 
 class Eupago_Multibanco_CallbackController extends Mage_Core_Controller_Front_Action { // extends Mage_Payment_Model_Method_Abstract 
 	
 	public function autorizeAction(){
@@ -39,6 +39,20 @@ class Eupago_Multibanco_CallbackController extends Mage_Core_Controller_Front_Ac
 			$order->setData('state', "complete");
 			$order->setStatus("processing");
 			$order->sendOrderUpdateEmail();
+
+				//////// hack for generate invoice automatically
+				$invoice = Mage::getModel('sales/service_order', $order)->prepareInvoice();
+				if (!$invoice->getTotalQty()) {
+					Mage::throwException(Mage::helper('core')->__('Cannot create an invoice without products.'));
+				}
+				$invoice->setRequestedCaptureCase(Mage_Sales_Model_Order_Invoice::CAPTURE_ONLINE);
+				$invoice->register();
+				$transactionSave = Mage::getModel('core/resource_transaction')
+					->addObject($invoice)
+					->addObject($invoice->getOrder());
+				$transactionSave->save();
+				////////////////
+				
 			$history = $order->addStatusHistoryComment('Order marked as complete automatically.', false);
 			$history->setIsCustomerNotified(true);
 			$order->save();
