@@ -4,32 +4,20 @@
         <td><table width="100%" border="0" cellspacing="1" cellpadding="0">
 
                 <?php
-                // carrega cliente temos de confirmar nas encomendas sem login
-				// if(Mage::getSingleton('customer/session')->isLoggedIn()) {
-					 // $customerData = Mage::getSingleton('customer/session')->getCustomer();
-					 // $costumer_id = $customerData->getId();
-				// }
-				$conn = Mage::getSingleton('core/resource')->getConnection('core_read');
-				$sales_flat_order_payment = Mage::getSingleton('core/resource')->getTableName('sales_flat_order_payment');
-				$referencia = "";
-				if(Mage::getSingleton('admin/session')->isLoggedIn()){
-					$entity_id = $this->getInfo()->getOrder()->getEntityId(); 
+                
+				$AdminQouteId = Mage::getSingleton('admin/session')->getAdminQuoteEupagoId();
+				if($AdminQouteId != null && $AdminQouteId != ""){
+					$quote_id = $AdminQouteId;
 				}else{
-					// carrega encomenda baseada no checkout/session
+					$orderId = Mage::getSingleton('checkout/session')->getLastRealOrderId();
 					$quote_id = Mage::getSingleton('checkout/session')->getQuoteId();
-					$quote = Mage::getModel('sales/quote')->load($quote_id);
-					$incrementId = $quote->getReservedOrderId();
-					$order = Mage::getModel('sales/order')->loadByIncrementId($incrementId);
-					$entity_id = $order->getEntityId();
 				}
-                if ($entity_id != "") {                   
-                    $query = $conn->query("SELECT  eupago_referencia FROM $sales_flat_order_payment  WHERE parent_id=$entity_id");
-					$referencia = $query->fetchColumn();
-					$query = $conn->query("SELECT  eupago_entidade FROM $sales_flat_order_payment  WHERE parent_id=$entity_id");
-					$entidade = $query->fetchColumn();
-					$query = $conn->query("SELECT  eupago_montante FROM $sales_flat_order_payment  WHERE parent_id=$entity_id");
-					$valor = $query->fetchColumn();
-					$valor = number_format($valor,'2',',','');
+                $conn = Mage::getSingleton('core/resource')->getConnection('core_read');
+				$referencia = "";
+                if ($quote_id != "") {                   
+                    $sales_flat_quote_payment = Mage::getSingleton('core/resource')->getTableName('sales_flat_quote_payment');
+                    $query = $conn->query("SELECT  eupago_referencia FROM $sales_flat_quote_payment  WHERE quote_id= $quote_id");
+                    $referencia = $query->fetchColumn();
                 }
                 if ($referencia == "") {
                     ?>
@@ -37,13 +25,25 @@
                         <td><img src="<?php echo $this->getSkinUrl('images/multibanco/eupagomultibanco.png') ?>" border="0" alt="<?php echo $this->getMethod()->getTitle(); ?>" title="<?php echo $this->getMethod()->getTitle(); ?>" /></td>
                     </tr>
                     <tr>
-                        <td> Os dados para pagamento multibanco ser&atilde;o apresentados quando finalizar a sua encomenda e/ou enviados para o seu e-mail.</td></tr>
-				<?
-					} else {
-							
-						if(($referencia != "" && $referencia != null) && ($entidade != "" && $entidade != null) && $valor){
-				
-				?>
+                        <td>  Os dados para pagamento multibanco ser&atilde;o apresentados quando finalizar a sua encomenda e/ou enviados para o seu e-mail.</td></tr>
+<?
+} else {
+
+
+    $conn = Mage::getSingleton('core/resource')->getConnection('core_read');
+    $sales_flat_order_payment = Mage::getSingleton('core/resource')->getTableName('sales_flat_order_payment');
+    $query = $conn->query("SELECT  max(parent_id) eupago_referencia FROM  $sales_flat_order_payment ");
+    $entity_id = $query->fetchColumn();
+
+    $query = $conn->query("SELECT  eupago_referencia FROM $sales_flat_order_payment  WHERE parent_id=$entity_id");
+    $referencia = $query->fetchColumn();
+    $query = $conn->query("SELECT  eupago_entidade FROM $sales_flat_order_payment  WHERE parent_id=$entity_id");
+    $entidade = $query->fetchColumn();
+    $query = $conn->query("SELECT  eupago_montante FROM $sales_flat_order_payment  WHERE parent_id=$entity_id");
+    $valor = $query->fetchColumn();
+    $valor = number_format($valor,'2',',','');
+    if(($referencia != "" && $referencia != null) && ($entidade != "" && $entidade != null) && $valor){
+	?>
 
                     <div align='center'>
 
