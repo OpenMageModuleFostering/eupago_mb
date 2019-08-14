@@ -27,7 +27,8 @@ class Eupago_Multibanco_Model_Process extends Mage_Payment_Model_Method_Abstract
     public function orderObserver($observer) {
 
         $chave_api = $this->getConfigData('chave');
-
+		$order = $observer->getEvent()->getOrder();
+		$payment_method_code = $order->getPayment()->getMethodInstance()->getCode();
         $id = $observer->getEvent()->getOrder()->getIncrementId();
         $order_value = $observer->getEvent()->getOrder()->getGrandTotal();
         $entity = $observer->getEvent()->getOrder()->getId();
@@ -38,7 +39,7 @@ class Eupago_Multibanco_Model_Process extends Mage_Payment_Model_Method_Abstract
         $writeConnection = $resource->getConnection('core_write');
         $quote_id = Mage::getSingleton('checkout/session')->getQuoteId();
 
-        if ($quote_id != "") {
+        if ($quote_id != "" && $payment_method_code == 'multibanco') {
             $conn = Mage::getSingleton('core/resource')->getConnection('core_read');
             $query = $conn->query("SELECT  eupago_referencia FROM $sales_flat_quote_payment  WHERE quote_id =$quote_id");
             $referencia = $query->fetchColumn();
