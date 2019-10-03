@@ -1,16 +1,19 @@
 {
-    "name": "OpenMageModuleFostering/Eupago_MB",
+    "name": "OpenMageModuleFostering\/Eupago_MB",
     "type": "magento-module",
     "license": "GNU-General-Public-License-(GPL)",
     "homepage": "",
     "description": "Pagamento por Multibanco",
     "authors": [
-    {
-        "name": "Eupago",
-        "email": "suporte@eupago.pt"
-    }
-],
+        {
+            "name": "Eupago",
+            "email": "suporte@eupago.pt"
+        }
+    ],
     "suggest": {
-        "magento-hackathon/magento-composer-installer": "*"
-    }
+        "magento-hackathon\/magento-composer-installer": "*"
+    },
+    "keywords": [
+        "openmage-module"
+    ]
 }
